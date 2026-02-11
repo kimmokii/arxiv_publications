@@ -8,21 +8,21 @@ generate a numbered PDF bibliography with year section headers.
 
 Usage examples:
   python make_arxiv_pdf.py --author "Kimmo Kiiveri" --out kiiveri_arxiv_bibliography.pdf
-  python make_arxiv_pdf.py --author "Kimmo Kiiveri" --from 2013 --to 2025
+  python make_arxiv_pdf.py --author "Kimmo Kiiveri" --from 2013 --to 2026
 """
 
 import argparse
 import time
 from datetime import datetime
-from urllib.parse import urlencode
 from html import escape
+from urllib.parse import urlencode
 
 import feedparser
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.units import mm
 from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import mm
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
 ARXIV_API = "https://export.arxiv.org/api/query"
 BATCH = 300  # arXiv allows up to 300 per request
@@ -264,7 +264,7 @@ def make_pdf(entries, outfile: str, author_fullname: str):
         if entry["link"]:
             story.append(
                 Paragraph(
-                    f'<a href="{escape(entry["link"])}">{escape(entry["link"])} </a>',
+                    f'<a href="{escape(entry["link"])}">{escape(entry["link"])}</a>',
                     small,
                 )
             )

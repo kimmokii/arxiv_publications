@@ -57,20 +57,20 @@ def build_author_queries(author_fullname: str):
         queries.append(f"au:{last}_{first_initial}")
     # Deduplicate while preserving order
     seen, out = set(), []
-    for q in queries:
-        if q not in seen:
-            seen.add(q)
-            out.append(q)
+    for query in queries:
+        if query not in seen:
+            seen.add(query)
+            out.append(query)
     return out, last
 
 
-def fetch_entries_for_query(q):
+def fetch_entries_for_query(query):
     """Fetch all results for one arXiv search query, handling pagination."""
     entries = []
     start = 0
     while True:
         params = {
-            "search_query": q,
+            "search_query": query,
             "start": start,
             "max_results": BATCH,
             "sortBy": "submittedDate",
@@ -96,40 +96,40 @@ def fetch_all_entries(queries):
     """Fetch and merge results from multiple queries, deduplicated by entry ID."""
     seen = set()
     merged = []
-    for q in queries:
-        batch = fetch_entries_for_query(q)
-        for e in batch:
-            arxiv_id = getattr(e, "id", None) or ""
+    for query in queries:
+        batch = fetch_entries_for_query(query)
+        for entry in batch:
+            arxiv_id = getattr(entry, "id", None) or ""
             if arxiv_id and arxiv_id not in seen:
                 seen.add(arxiv_id)
-                merged.append(e)
+                merged.append(entry)
     return merged
 
 
-def normalize_entry(e):
+def normalize_entry(entry):
     """Extract standard fields from an arXiv Atom entry."""
-    title = e.title.strip()
+    title = entry.title.strip()
 
     authors_list = []
-    if "authors" in e:
-        for a in e.authors:
+    if "authors" in entry:
+        for a in entry.authors:
             name = a.get("name", "").strip()
             if name:
                 authors_list.append(name)
     authors_str = ", ".join(authors_list)
 
     pub_dt, pub_year = None, None
-    if hasattr(e, "published"):
+    if hasattr(entry, "published"):
         try:
-            pub_dt = datetime.strptime(e.published, "%Y-%m-%dT%H:%M:%SZ")
+            pub_dt = datetime.strptime(entry.published, "%Y-%m-%dT%H:%M:%SZ")
             pub_year = pub_dt.year
         except Exception:
             pub_year = None
 
-    link = getattr(e, "id", None)
+    link = getattr(entry, "id", None)
     arxiv_id = link.split("/")[-1] if link else None
 
-    abstract = getattr(e, "summary", "").strip()
+    abstract = getattr(entry, "summary", "").strip()
 
     return {
         "title": title,
@@ -140,7 +140,7 @@ def normalize_entry(e):
         "arxiv_id": arxiv_id,
         "link": link,
         "abstract": abstract,
-        "raw": e,
+        "raw": entry,
     }
 
 
@@ -168,10 +168,10 @@ def filter_by_author_substring(entries, author_substr: str):
         return entries
     needle = author_substr.lower()
     out = []
-    for d in entries:
-        authors = [a.lower() for a in d.get("authors_list", [])]
-        if any(needle in a for a in authors):
-            out.append(d)
+    for entry in entries:
+        authors = [author.lower() for author in entry.get("authors_list", [])]
+        if any(needle in author for author in authors):
+            out.append(entry)
     return out
 
 
@@ -180,12 +180,12 @@ def filter_by_year_range(entries, year_from: int | None, year_to: int | None):
     if year_from is None and year_to is None:
         return entries
     out = []
-    for d in entries:
-        y = d.get("year", None)
-        if y is None:
+    for entry in entries:
+        year = entry.get("year", None)
+        if year is None:
             continue
-        if (year_from is None or y >= year_from) and (year_to is None or y <= year_to):
-            out.append(d)
+        if (year_from is None or year >= year_from) and (year_to is None or year <= year_to):
+            out.append(entry)
     return out
 
 
@@ -230,27 +230,27 @@ def make_pdf(entries, outfile: str, author_fullname: str):
 
     current_year = None
     counter = 1
-    for d in entries:
-        y = d["year"] if d["year"] is not None else "—"
-        if y != current_year:
+    for entry in entries:
+        year = entry["year"] if entry["year"] is not None else "—"
+        if year != current_year:
             story.append(Spacer(1, 6))
-            story.append(Paragraph(str(y), year_style))
+            story.append(Paragraph(str(year), year_style))
             story.append(Spacer(1, 2))
-            current_year = y
+            current_year = year
 
-        shown_authors = format_authors(d.get("authors_list", []), max_names=3)
+        shown_authors = format_authors(entry.get("authors_list", []), max_names=3)
 
         parts = []
-        parts.append(f"<b>{counter}.</b> {escape(d['title'])}. ")
+        parts.append(f"<b>{counter}.</b> {escape(entry['title'])}. ")
         if shown_authors:
             parts.append(f"{escape(shown_authors)}. ")
-        if d["arxiv_id"]:
-            parts.append(f"arXiv:{escape(d['arxiv_id'])}")
+        if entry["arxiv_id"]:
+            parts.append(f"arXiv:{escape(entry['arxiv_id'])}")
         line = "".join(parts)
 
         story.append(Paragraph(line, normal))
-        if d["link"]:
-            story.append(Paragraph(f'<a href="{escape(d["link"])}">{escape(d["link"])} </a>', small))
+        if entry["link"]:
+            story.append(Paragraph(f'<a href="{escape(entry["link"])}">{escape(entry["link"])} </a>', small))
         story.append(Spacer(1, 6))
         counter += 1
 
@@ -270,8 +270,8 @@ def main():
     AUTHOR_MATCH_SUBSTR_FALLBACK = last_name or None
 
     print("Queries:")
-    for q in queries:
-        print("  ", q)
+    for query in queries:
+        print("  ", query)
 
     raw_entries = fetch_all_entries(queries)
     print(f"Combined results before normalization: {len(raw_entries)}")

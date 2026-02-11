@@ -9,6 +9,8 @@ sorts them by year, and creates a clean **numbered PDF bibliography**.
 
 ## Installation
 
+Choose one of the two options below. `uv` and `pip` are alternative installers.
+
 ### uv
 
 ```bash

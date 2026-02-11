@@ -1,0 +1,11 @@
+[project]
+name = "arxiv-publications"
+version = "0.1.0"
+description = "Fetches an author's publications from arXiv using multiple name variations,
+sorts them by year, and creates a clean numbered PDF bibliography."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "feedparser>=6.0",
+    "reportlab>=4.0",
+]

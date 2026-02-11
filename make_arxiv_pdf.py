@@ -276,7 +276,7 @@ def main():
     raw_entries = fetch_all_entries(queries)
     print(f"Combined results before normalization: {len(raw_entries)}")
 
-    parsed = [normalize_entry(e) for e in raw_entries]
+    parsed = [normalize_entry(entry) for entry in raw_entries]
 
     filtered = filter_by_author_substring(parsed, AUTHOR_MATCH_SUBSTR_FALLBACK)
     print(f"After author-filter: {len(filtered)}")

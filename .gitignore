@@ -1,4 +1,43 @@
+# Output from this repo
 *.pdf
-.venv/
+
+# OS
+.DS_Store
+
+# Python caches
 __pycache__/
 *.pyc
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.hypothesis/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Virtual environments
+.venv/
+
+# IDEs
+.idea/
+
+# Logs & temp files
+*.log
+*.bak
+*.tmp
+*.swp
+*.swo
+
+# Packaging / build artifacts
+*.egg-info/
+dist/
+build/
+*.egg
+*.whl
+
+# Coverage
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.coverage

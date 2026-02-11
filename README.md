@@ -9,5 +9,5 @@ sorts them by year, and creates a clean **numbered PDF bibliography**.
 
 ```bash
 python make_arxiv_pdf.py --author "Kimmo Kiiveri"
-python make_arxiv_pdf.py --author "Kimmo Kiiveri" --from 2013 --to 2025 --out kiiveri_publications.pdf
+python make_arxiv_pdf.py --author "Kimmo Kiiveri" --from 2013 --to 2026 --out kiiveri_publications.pdf
 

@@ -9,3 +9,8 @@ dependencies = [
     "feedparser>=6.0",
     "reportlab>=4.0",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.0",
+]

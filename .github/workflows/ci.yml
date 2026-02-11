@@ -21,3 +21,10 @@ jobs:
 
       - name: Ruff format check
         run: uv run ruff format --check .
+
+      - name: Export requirements
+        run: uv export --without-hashes -r requirements.txt
+
+      - name: Ensure requirements.txt is up to date
+        run: |
+          git diff --exit-code requirements.txt || (echo "requirements.txt is not up to date. Please run 'uv export --without-hashes -r requirements.txt' and commit the changes." && exit 1)

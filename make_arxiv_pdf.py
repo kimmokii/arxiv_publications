@@ -25,8 +25,8 @@ from reportlab.lib.units import mm
 from reportlab.lib import colors
 
 ARXIV_API = "https://export.arxiv.org/api/query"
-BATCH = 300          # arXiv allows up to 300 per request
-MAX_TOTAL = 5000     # safety cap
+BATCH = 300  # arXiv allows up to 300 per request
+MAX_TOTAL = 5000  # safety cap
 DEFAULT_OUTPUT = "arxiv_bibliography.pdf"
 AUTHOR_MATCH_SUBSTR_FALLBACK = None  # set dynamically from last name
 
@@ -48,7 +48,7 @@ def build_author_queries(author_fullname: str):
         f'au:"{author_fullname}"',
         f'au:"{last}, {first}"',
         f"au:{last}",
-        f"all:\"{author_fullname}\"",
+        f'all:"{author_fullname}"',
         f"all:{last}",
     ]
     # Add Last_F (e.g., Kiiveri_K)
@@ -146,9 +146,11 @@ def normalize_entry(entry):
 
 def sort_entries(entries):
     """Sort newest → oldest by publication date; tie-breaker: title."""
+
     def keyfn(d):
         dt = d["published"] or datetime(1900, 1, 1)
         return (dt, d["title"].lower())
+
     return sorted(entries, key=keyfn, reverse=True)
 
 
@@ -184,7 +186,9 @@ def filter_by_year_range(entries, year_from: int | None, year_to: int | None):
         year = entry.get("year", None)
         if year is None:
             continue
-        if (year_from is None or year >= year_from) and (year_to is None or year <= year_to):
+        if (year_from is None or year >= year_from) and (
+            year_to is None or year <= year_to
+        ):
             out.append(entry)
     return out
 
@@ -194,10 +198,10 @@ def make_pdf(entries, outfile: str, author_fullname: str):
     doc = SimpleDocTemplate(
         outfile,
         pagesize=A4,
-        leftMargin=18*mm,
-        rightMargin=18*mm,
-        topMargin=18*mm,
-        bottomMargin=18*mm,
+        leftMargin=18 * mm,
+        rightMargin=18 * mm,
+        topMargin=18 * mm,
+        bottomMargin=18 * mm,
     )
     styles = getSampleStyleSheet()
     title_style = styles["Title"]
@@ -216,7 +220,13 @@ def make_pdf(entries, outfile: str, author_fullname: str):
         textColor=colors.HexColor("#333333"),
     )
 
-    small = ParagraphStyle("small", parent=normal, fontSize=9, leading=12, textColor=colors.HexColor("#333333"))
+    small = ParagraphStyle(
+        "small",
+        parent=normal,
+        fontSize=9,
+        leading=12,
+        textColor=colors.HexColor("#333333"),
+    )
 
     story = []
     # Dynamic title
@@ -224,7 +234,9 @@ def make_pdf(entries, outfile: str, author_fullname: str):
     story.append(Spacer(1, 8))
 
     if not entries:
-        story.append(Paragraph("No publications found for the given parameters.", normal))
+        story.append(
+            Paragraph("No publications found for the given parameters.", normal)
+        )
         doc.build(story)
         return
 
@@ -250,7 +262,12 @@ def make_pdf(entries, outfile: str, author_fullname: str):
 
         story.append(Paragraph(line, normal))
         if entry["link"]:
-            story.append(Paragraph(f'<a href="{escape(entry["link"])}">{escape(entry["link"])} </a>', small))
+            story.append(
+                Paragraph(
+                    f'<a href="{escape(entry["link"])}">{escape(entry["link"])} </a>',
+                    small,
+                )
+            )
         story.append(Spacer(1, 6))
         counter += 1
 
@@ -258,11 +275,27 @@ def make_pdf(entries, outfile: str, author_fullname: str):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate a numbered arXiv bibliography PDF for an author.")
-    parser.add_argument("--author", required=True, help='Author full name, e.g., "Kimmo Kiiveri"')
-    parser.add_argument("--out", default=DEFAULT_OUTPUT, help="Output PDF filename (default: arxiv_bibliography.pdf)")
-    parser.add_argument("--from", dest="year_from", type=int, default=None, help="Inclusive start year filter")
-    parser.add_argument("--to", dest="year_to", type=int, default=None, help="Inclusive end year filter")
+    parser = argparse.ArgumentParser(
+        description="Generate a numbered arXiv bibliography PDF for an author."
+    )
+    parser.add_argument(
+        "--author", required=True, help='Author full name, e.g., "Kimmo Kiiveri"'
+    )
+    parser.add_argument(
+        "--out",
+        default=DEFAULT_OUTPUT,
+        help="Output PDF filename (default: arxiv_bibliography.pdf)",
+    )
+    parser.add_argument(
+        "--from",
+        dest="year_from",
+        type=int,
+        default=None,
+        help="Inclusive start year filter",
+    )
+    parser.add_argument(
+        "--to", dest="year_to", type=int, default=None, help="Inclusive end year filter"
+    )
     args = parser.parse_args()
 
     queries, last_name = build_author_queries(args.author)
@@ -283,7 +316,9 @@ def main():
 
     filtered = filter_by_year_range(filtered, args.year_from, args.year_to)
     if args.year_from or args.year_to:
-        print(f"After year-range filter [{args.year_from}..{args.year_to}]: {len(filtered)}")
+        print(
+            f"After year-range filter [{args.year_from}..{args.year_to}]: {len(filtered)}"
+        )
 
     sorted_entries = sort_entries(filtered)
     make_pdf(sorted_entries, args.out, args.author)
@@ -292,4 +327,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

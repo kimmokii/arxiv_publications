@@ -3,9 +3,9 @@
 Fetches an author's publications from **arXiv** using multiple name variations,  
 sorts them by year, and creates a clean **numbered PDF bibliography**.
 
-![Example PDF](example_pdf.png)
-
----
+<p align="center">
+  <img src="example_pdf.png" alt="Example PDF" width="400">
+</p>
 
 ## Installation
 

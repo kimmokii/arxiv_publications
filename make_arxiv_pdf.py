@@ -28,7 +28,6 @@ ARXIV_API = "https://export.arxiv.org/api/query"
 BATCH = 300  # arXiv allows up to 300 per request
 MAX_TOTAL = 5000  # safety cap
 DEFAULT_OUTPUT = "arxiv_bibliography.pdf"
-AUTHOR_MATCH_SUBSTR_FALLBACK = None  # set dynamically from last name
 
 
 def build_author_queries(author_fullname: str):
@@ -40,6 +39,8 @@ def build_author_queries(author_fullname: str):
     - 'all:' variants as a fallback
     """
     author_fullname = author_fullname.strip()
+    if not author_fullname:
+        raise ValueError("Author name cannot be empty")
     parts = author_fullname.split()
     first = parts[0] if parts else ""
     last = parts[-1] if len(parts) >= 2 else (parts[0] if parts else "")
@@ -108,7 +109,7 @@ def fetch_all_entries(queries):
 
 def normalize_entry(entry):
     """Extract standard fields from an arXiv Atom entry."""
-    title = entry.title.strip()
+    title = getattr(entry, "title", "").strip()
 
     authors_list = []
     if "authors" in entry:
@@ -127,7 +128,12 @@ def normalize_entry(entry):
             pub_year = None
 
     link = getattr(entry, "id", None)
-    arxiv_id = link.split("/")[-1] if link else None
+    arxiv_id = None
+    if link:
+        try:
+            arxiv_id = link.split("/")[-1]
+        except Exception:
+            arxiv_id = None
 
     abstract = getattr(entry, "summary", "").strip()
 
@@ -164,14 +170,17 @@ def format_authors(authors, max_names=3):
     return ", ".join(names)
 
 
-def filter_by_author_substring(entries, author_substr: str):
+def filter_by_author_substring(entries, author_substr: str | None):
     """Keep entries where any author contains the given substring (case-insensitive)."""
     if not author_substr:
         return entries
     needle = author_substr.lower()
     out = []
     for entry in entries:
-        authors = [author.lower() for author in entry.get("authors_list", [])]
+        authors_list = entry.get("authors_list", [])
+        if not authors_list:
+            continue
+        authors = [author.lower() for author in authors_list]
         if any(needle in author for author in authors):
             out.append(entry)
     return out
@@ -243,7 +252,7 @@ def make_pdf(entries, outfile: str, author_fullname: str):
     current_year = None
     counter = 1
     for entry in entries:
-        year = entry["year"] if entry["year"] is not None else "—"
+        year = entry.get("year") if entry.get("year") is not None else "—"
         if year != current_year:
             story.append(Spacer(1, 6))
             story.append(Paragraph(str(year), year_style))
@@ -253,18 +262,21 @@ def make_pdf(entries, outfile: str, author_fullname: str):
         shown_authors = format_authors(entry.get("authors_list", []), max_names=3)
 
         parts = []
-        parts.append(f"<b>{counter}.</b> {escape(entry['title'])}. ")
+        title = entry.get("title", "[No title]")
+        parts.append(f"<b>{counter}.</b> {escape(title)}. ")
         if shown_authors:
             parts.append(f"{escape(shown_authors)}. ")
-        if entry["arxiv_id"]:
-            parts.append(f"arXiv:{escape(entry['arxiv_id'])}")
+        arxiv_id = entry.get("arxiv_id")
+        if arxiv_id:
+            parts.append(f"arXiv:{escape(arxiv_id)}")
         line = "".join(parts)
 
         story.append(Paragraph(line, normal))
-        if entry["link"]:
+        link = entry.get("link")
+        if link:
             story.append(
                 Paragraph(
-                    f'<a href="{escape(entry["link"])}">{escape(entry["link"])}</a>',
+                    f'<a href="{escape(link)}">{escape(link)}</a>',
                     small,
                 )
             )
@@ -299,8 +311,6 @@ def main():
     args = parser.parse_args()
 
     queries, last_name = build_author_queries(args.author)
-    global AUTHOR_MATCH_SUBSTR_FALLBACK
-    AUTHOR_MATCH_SUBSTR_FALLBACK = last_name or None
 
     print("Queries:")
     for query in queries:
@@ -311,7 +321,7 @@ def main():
 
     parsed = [normalize_entry(entry) for entry in raw_entries]
 
-    filtered = filter_by_author_substring(parsed, AUTHOR_MATCH_SUBSTR_FALLBACK)
+    filtered = filter_by_author_substring(parsed, last_name)
     print(f"After author-filter: {len(filtered)}")
 
     filtered = filter_by_year_range(filtered, args.year_from, args.year_to)

@@ -12,6 +12,7 @@ Usage examples:
 """
 
 import argparse
+import json
 import time
 from datetime import datetime
 from html import escape
@@ -286,6 +287,22 @@ def make_pdf(entries, outfile: str, author_fullname: str):
     doc.build(story)
 
 
+def save_latest_entry(entries):
+    """Save only the latest entry for change detection."""
+    if entries:
+        latest = [{
+            "title": entries[0].get("title"),
+            "authors_list": entries[0].get("authors_list"),
+            "year": entries[0].get("year"),
+            "arxiv_id": entries[0].get("arxiv_id"),
+        }]
+    else:
+        latest = []
+    
+    with open(".arxiv_cache", "w") as f:
+        json.dump(latest, f)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Generate a numbered arXiv bibliography PDF for an author."
@@ -332,6 +349,10 @@ def main():
 
     sorted_entries = sort_entries(filtered)
     make_pdf(sorted_entries, args.out, args.author)
+    
+    # Save latest entry for change detection
+    save_latest_entry(sorted_entries)
+    
     print(f"Done: {args.out}")
 
 

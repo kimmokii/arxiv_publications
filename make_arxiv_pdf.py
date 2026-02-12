@@ -36,8 +36,9 @@ def build_author_queries(author_fullname: str):
     Build a robust set of arXiv queries for an author:
     - "First Last"
     - "Last, First"
-    - "Last" and "Last_F" variants
-    - 'all:' variants as a fallback
+    - "Last_F" variant (e.g., Kiiveri_K)
+
+    Note: Avoids broad 'all:' and 'au:Last' queries to prevent false positives.
     """
     author_fullname = author_fullname.strip()
     if not author_fullname:
@@ -49,9 +50,6 @@ def build_author_queries(author_fullname: str):
     queries = [
         f'au:"{author_fullname}"',
         f'au:"{last}, {first}"',
-        f"au:{last}",
-        f'all:"{author_fullname}"',
-        f"all:{last}",
     ]
     # Add Last_F (e.g., Kiiveri_K)
     if first:
@@ -167,7 +165,7 @@ def format_authors(authors, max_names=3):
         return ""
     names = list(authors)
     if len(names) > max_names:
-        return ", ".join(names[:max_names]) + " et al."
+        return ", ".join(names[:max_names]) + " et al"
     return ", ".join(names)
 
 

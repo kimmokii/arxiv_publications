@@ -1,11 +1,38 @@
 # arXiv Publications PDF Generator
 
-Fetches an author's publications from **arXiv** using multiple name variations,  
-sorts them by year, and creates a clean **numbered PDF bibliography**.
+**Automated tool for fetching and maintaining an up-to-date bibliography from arXiv's research database.**
+
+This project demonstrates end-to-end automation using Python, GitHub Actions, and smart change detection. It queries arXiv's API with multiple search strategies, deduplicates results, and generates a clean PDF bibliography — all with automated weekly updates that only commit when new publications are detected.
 
 <p align="center">
   <img src="example_pdf.png" alt="Example PDF" width="400">
 </p>
+
+## Features
+
+- **Smart API querying**: Multiple name variations (full name, reversed, initials) to maximize recall
+- **Intelligent change detection**: Compares latest entry to avoid unnecessary updates
+- **Robust error handling**: Defensive checks for missing/malformed API responses
+- **Automated workflow**: GitHub Actions with opt-in scheduled updates
+- **Clean PDF generation**: Year-grouped bibliographies with ReportLab
+- **Configurable filtering**: Year ranges and author substring matching
+
+## Tech Stack
+
+- **Python 3.11+** with type hints
+- **feedparser** for arXiv API integration
+- **ReportLab** for PDF generation
+- **GitHub Actions** for scheduled automation
+- **JSON-based caching** for change detection
+
+## How It Works
+
+1. **Query phase**: Generates multiple search queries (full name, reversed, initials) to maximize recall from arXiv API
+2. **Fetch & deduplicate**: Handles pagination, deduplicates by entry ID across queries
+3. **Filter & sort**: Applies author substring matching and optional year filtering, sorts newest → oldest
+4. **Generate PDF**: Creates year-grouped bibliography with clickable arXiv links
+5. **Change detection**: Saves latest entry to `.arxiv_cache`; GitHub Actions compares this to detect new publications
+6. **Automated commit**: Only commits when cache differs (i.e., author published something new)
 
 ## Installation
 
@@ -33,7 +60,7 @@ python make_arxiv_pdf.py --author "Kimmo Kiiveri"
 python make_arxiv_pdf.py --author "Kimmo Kiiveri" --from 2013 --to 2026 --out kiiveri_publications.pdf
 ```
 
-## Automatic Updates (GitHub Actions)
+## Automated Weekly Updates (GitHub Actions)
 
 A workflow **runs every Sunday at 00:00 UTC** to check for new publications, but is **disabled by default**.
 

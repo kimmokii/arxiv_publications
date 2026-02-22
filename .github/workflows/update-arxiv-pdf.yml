@@ -21,20 +21,26 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+
       - name: Install dependencies
         run: pip install -r requirements.txt
 
       - name: Generate PDF
-        run: python make_arxiv_pdf.py --author "Kimmo Kiiveri" --out kiiveri_arxiv_bibliography.pdf
+        run: python make_arxiv_pdf.py --author "Kimmo Kiiveri" --out example_pdf/example_bibliography.pdf
+
+      - name: Generate PNG preview (first page)
+        run: pdftoppm -png -f 1 -l 1 -singlefile example_pdf/example_bibliography.pdf example_pdf
 
       - name: Commit if latest entry changed
         if: vars.AUTO_COMMIT_PDF == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          
+
           if ! git diff --quiet .arxiv_cache; then
-            git add kiiveri_arxiv_bibliography.pdf .arxiv_cache
+            git add example_pdf/ .arxiv_cache
             git commit -m "chore: update arXiv bibliography PDF"
             git push
           else

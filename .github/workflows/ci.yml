@@ -40,7 +40,6 @@ jobs:
           config: >-
             p/security-audit
             p/python
-          generateSarif: false
 
       - name: Trivy vulnerability scan
         uses: aquasecurity/trivy-action@master

@@ -15,6 +15,7 @@ This project demonstrates end-to-end automation using Python, GitHub Actions, an
 - **Robust error handling**: Defensive checks for missing/malformed API responses
 - **Automated workflow**: GitHub Actions with opt-in scheduled updates
 - **Clean PDF generation**: Year-grouped bibliographies with ReportLab
+- **PNG preview generation**: Automatically generates preview image from first page of PDF
 - **Configurable filtering**: Year ranges and author substring matching
 
 ## Tech Stack
@@ -56,8 +57,22 @@ pip install -r requirements.txt
 ## Usage
 
 ```bash
-python make_arxiv_pdf.py --author "Kimmo Kiiveri"
-python make_arxiv_pdf.py --author "Kimmo Kiiveri" --from 2013 --to 2026 --out kiiveri_publications.pdf
+python make_arxiv_pdf.py --author "Kimmo Kiiveri" --out example_pdf/example_bibliography.pdf
+python make_arxiv_pdf.py --author "Kimmo Kiiveri" --from 2013 --to 2026
+```
+
+### Optional: Generate PNG Preview
+
+To generate a PNG preview of the first page (requires `poppler-utils`):
+
+```bash
+# macOS
+brew install poppler
+pdftoppm -png -f 1 -l 1 -singlefile example_pdf/example_bibliography.pdf example_pdf
+
+# Ubuntu/Debian
+sudo apt-get install poppler-utils
+pdftoppm -png -f 1 -l 1 -singlefile example_pdf/example_bibliography.pdf example_pdf
 ```
 
 ## Automated Weekly Updates (GitHub Actions)
@@ -67,8 +82,9 @@ A workflow **runs every Sunday at 00:00 UTC** to check for new publications, but
 **How it works:**
 
 - The workflow fetches the latest publication from arXiv
-- Compares it against the cached latest entry (`.arxiv_cache`)
-- Only updates and commits the PDF if a new publication is detected
+- Generates a PDF bibliography and PNG preview (first page)
+- Compares against the cached latest entry (`.arxiv_cache`)
+- Only updates and commits when a new publication is detected
 - No unnecessary commits — updates happen only when content changes
 
 **To enable on your fork:**

@@ -7,7 +7,7 @@ deduplicate, optionally filter by year range, sort newest → oldest, and
 generate a numbered PDF bibliography with year section headers.
 
 Usage examples:
-  python make_arxiv_pdf.py --author "Kimmo Kiiveri" --out kiiveri_arxiv_bibliography.pdf
+  python make_arxiv_pdf.py --author "Kimmo Kiiveri" --out example_pdf/example_bibliography.pdf
   python make_arxiv_pdf.py --author "Kimmo Kiiveri" --from 2013 --to 2026
 """
 
@@ -28,7 +28,8 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 ARXIV_API = "https://export.arxiv.org/api/query"
 BATCH = 300  # arXiv allows up to 300 per request
 MAX_TOTAL = 5000  # safety cap
-DEFAULT_OUTPUT = "arxiv_bibliography.pdf"
+OUTDIR = "./examples/"
+DEFAULT_OUTPUT = OUTDIR + "arxiv_bibliography.pdf"
 
 
 def build_author_queries(author_fullname: str):

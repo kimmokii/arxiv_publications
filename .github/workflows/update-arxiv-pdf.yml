@@ -44,8 +44,14 @@ jobs:
 
           if ! git diff --quiet .arxiv_cache; then
             git add example_pdf/ .arxiv_cache
-            git commit -m "chore: update arXiv bibliography PDF"
-            git push
+            git commit -m "chore: update arXiv bibliography PDF" 
+
+          # Ensure we're on the main branch before pushing
+          git fetch origin main
+          git rebase origin/main
+
+          # Push only to main branch
+          git push origin main
           else
             echo "No changes in latest entry"
           fi

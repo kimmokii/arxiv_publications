@@ -42,13 +42,13 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          if ! git diff --quiet .arxiv_cache; then
-            git add example_pdf/ .arxiv_cache
-            git commit -m "chore: update arXiv bibliography PDF" 
-
           # Ensure we're on the main branch before pushing
           git fetch origin main
           git rebase origin/main
+
+          if ! git diff --quiet .arxiv_cache; then
+            git add example_pdf/ .arxiv_cache
+            git commit -m "chore: update arXiv bibliography PDF" 
 
           # Push only to main branch
           git push origin main

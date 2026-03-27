@@ -48,6 +48,7 @@ def build_author_queries(author_fullname: str):
     first = parts[0] if parts else ""
     last = parts[-1] if len(parts) >= 2 else (parts[0] if parts else "")
 
+    # queries = [f'au:"{author_fullname}"', f'au:"{last}, {first}"', f"au:{last}_{first[0]}" if first else None]
     queries = [
         f'au:"{author_fullname}"',
         f'au:"{last}, {first}"',
@@ -56,7 +57,10 @@ def build_author_queries(author_fullname: str):
     if first:
         first_initial = first[0]
         queries.append(f"au:{last}_{first_initial}")
-    # Deduplicate while preserving order
+
+    # Removes deduplicates while preserving original order
+    # seen in set is O(1) and set is faster for membership check.
+    # out in list is O(n) and preserves the order of first occurrence.
     seen, out = set(), []
     for query in queries:
         if query not in seen:
@@ -311,6 +315,15 @@ def main():
     parser.add_argument(
         "--author", required=True, help='Author full name, e.g., "Kimmo Kiiveri"'
     )
+
+    parser.add_argument(
+        "--limit",
+        required=False,
+        help="Maximum number of publications to include",
+        type=int,
+        default=None,
+    )
+
     parser.add_argument(
         "--out",
         default=DEFAULT_OUTPUT,
